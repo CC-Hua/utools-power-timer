@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>电源定时</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app" id="app" data-action="shutdown">
+      <header class="topbar">
+        <div class="brand">
+          <img class="brand-logo" src="logo.png" alt="" />
+          <div class="brand-text">
+            <h1>电源定时</h1>
+            <p>到点自动关机 · 重启 · 睡眠，执行前随时可中断</p>
+          </div>
+        </div>
+        <span class="pill" id="platformPill">检测中</span>
+      </header>
+
+      <section class="task" id="taskCard" hidden>
+        <div class="task-head">
+          <div class="task-id">
+            <span class="task-badge" id="taskBadge">关机</span>
+            <div class="task-meta">
+              <strong id="taskTime">—</strong>
+              <span id="taskSub">—</span>
+            </div>
+          </div>
+          <div class="task-count" id="taskCount">00:00:00</div>
+        </div>
+        <div class="task-bar"><i id="taskProgress"></i></div>
+        <div class="task-foot">
+          <span class="task-note" id="taskNote"></span>
+          <div class="task-actions">
+            <button class="btn ghost" id="btnEdit" type="button">修改</button>
+            <button class="btn danger" id="btnCancel" type="button">取消任务</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="composer" id="composer">
+        <div class="edit-banner" id="editBanner" hidden>
+          <span>正在修改已安排的任务，保存后旧任务会被替换</span>
+          <button type="button" id="btnCancelEdit">放弃修改</button>
+        </div>
+
+        <div class="field">
+          <span class="field-label">执行操作</span>
+          <div class="segment" id="actionGroup" role="group" aria-label="执行操作"></div>
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <span class="field-label">触发方式</span>
+            <div class="tabs" id="modeTabs" role="tablist" aria-label="触发方式">
+              <button type="button" data-mode="countdown" role="tab">倒计时</button>
+              <button type="button" data-mode="absolute" role="tab">指定时间</button>
+            </div>
+          </div>
+
+          <div id="countdownPanel">
+            <div class="chips" id="delayChips">
+              <button type="button" data-min="15">15 分钟</button>
+              <button type="button" data-min="30">30 分钟</button>
+              <button type="button" data-min="60">1 小时</button>
+              <button type="button" data-min="120">2 小时</button>
+              <button type="button" data-min="480">8 小时</button>
+            </div>
+            <div class="inline">
+              <input id="delayValue" type="number" min="1" max="10080" step="1" value="30" inputmode="numeric" aria-label="倒计时数值" />
+              <select id="delayUnit" aria-label="倒计时单位">
+                <option value="minute">分钟后执行</option>
+                <option value="hour">小时后执行</option>
+              </select>
+              <span class="preview" id="countdownPreview">—</span>
+            </div>
+          </div>
+
+          <div id="absolutePanel" hidden>
+            <div class="inline">
+              <input id="datetime" type="datetime-local" step="60" aria-label="执行时间" />
+              <span class="preview" id="absolutePreview">—</span>
+            </div>
+            <div class="chips" id="timeChips">
+              <button type="button" data-preset="today2300">今天 23:00</button>
+              <button type="button" data-preset="tomorrow0700">明天 07:00</button>
+              <button type="button" data-preset="tomorrow0900">明天 09:00</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="options">
+          <label class="opt">
+            <span>提前提醒</span>
+            <select id="remindLead" aria-label="提前提醒">
+              <option value="0">不提醒</option>
+              <option value="60">1 分钟</option>
+              <option value="300" selected>5 分钟</option>
+              <option value="600">10 分钟</option>
+              <option value="1800">30 分钟</option>
+            </select>
+          </label>
+          <label class="opt check" id="forceOpt">
+            <input type="checkbox" id="force" />
+            <span>强制关闭程序</span>
+          </label>
+          <label class="opt check">
+            <input type="checkbox" id="dryRun" />
+            <span>演练模式（不真正执行）</span>
+          </label>
+        </div>
+
+        <button class="btn primary" id="btnSubmit" type="button">安排任务</button>
+        <p class="form-hint" id="formHint">任务会登记到 uTools 定时任务，关闭插件界面后依然有效。</p>
+      </section>
+
+      <details class="env" id="envBox">
+        <summary>
+          <span>运行环境 · 所需权限 · 实际执行的命令</span>
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </summary>
+        <div class="env-body">
+          <div class="env-row"><span>适用系统</span><b id="envPlatform">—</b></div>
+          <div class="env-row"><span>所需权限</span><p id="envPermission">—</p></div>
+          <div class="env-row"><span>可靠性</span><p id="envReliability">—</p></div>
+          <div class="env-cmds" id="envCommands"></div>
+          <p class="env-tip">取消任务会同时移除 uTools 后台定时与本机倒计时，不会残留系统级关机指令。</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="toast" id="toast" hidden></div>
+    <script src="app.js"></script>
+  </body>
+</html>

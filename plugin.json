@@ -1,0 +1,15 @@
+{
+  "main": "index.html",
+  "logo": "logo.png",
+  "preload": "preload.js",
+  "pluginSetting": {
+    "single": true
+  },
+  "features": [
+    {
+      "code": "power-timer",
+      "description": "定时关机、定时重启、定时睡眠，支持指定时间与倒计时",
+      "cmds": ["定时关机", "定时重启", "定时睡眠", "电源定时", "关机助手"]
+    }
+  ]
+}
